@@ -4,25 +4,24 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Date;
 
 @Entity
 @Getter
 @Setter
 public class Poll {
 
-
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String question;
 
-    private String endsAt;
+    private Date endsAt;
 
     private String status; //enabled, disabled, expired
 
 
-    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL)
-    private List<PollOption> options;
+//    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL)
+//    private List<PollOption> options;
 }

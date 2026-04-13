@@ -10,6 +10,8 @@ import java.util.List;
 @Getter
 @Entity
 public class PollOption {
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
 
@@ -17,8 +19,8 @@ public class PollOption {
 
     private int voteCount;
 
-    @OneToMany(mappedBy = "pollOption", cascade = CascadeType.ALL)
-    private List<Vote> votes;
+//    @OneToMany(mappedBy = "pollOption", cascade = CascadeType.ALL)
+//    private List<Vote> votes;
 
     @ManyToOne
     private Poll poll;
