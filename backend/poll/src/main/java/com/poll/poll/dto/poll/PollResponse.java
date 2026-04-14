@@ -1,7 +1,6 @@
 package com.poll.poll.dto.poll;
 
 import com.poll.poll.dto.polloption.PollOptionResponse;
-import com.poll.poll.entity.PollOption;
 import lombok.Builder;
 
 import java.util.List;

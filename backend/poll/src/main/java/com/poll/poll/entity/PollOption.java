@@ -22,6 +22,7 @@ public class PollOption {
 //    @OneToMany(mappedBy = "pollOption", cascade = CascadeType.ALL)
 //    private List<Vote> votes;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "poll_id")
     private Poll poll;
 }

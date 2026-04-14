@@ -9,7 +9,9 @@ import com.poll.poll.entity.PollOption;
 import com.poll.poll.repository.PollOptionRepository;
 import com.poll.poll.repository.PollRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,21 +33,16 @@ public class PollService {
     @Transactional // if any calls fail, rollback
     public PollResponse createPoll(PollRequest pollRequest) {
 
-        //validation
-        if(pollRequest.options().size() < 2
-                || pollRequest.options().size() > 10
-                || pollRequest.question().isBlank()
-        ) {
-            throw new RuntimeException("");
-        }
-
         //create the poll first, then add the poll to the poll options
         Poll newPoll = new Poll();
         newPoll.setQuestion(pollRequest.question());
 
         Poll createdPoll = pollRepository.save(newPoll);
 
-        List<PollOption> optionsToSave = pollRequest.options().stream().map(option ->  {
+        List<PollOption> optionsToSave = pollRequest
+                .options()
+                .stream()
+                .map(option ->  {
             PollOption pollOption = new PollOption();
             pollOption.setPoll(createdPoll);
             pollOption.setOptionText(option);
@@ -56,7 +53,8 @@ public class PollService {
 
         pollOptionRepository.saveAll(optionsToSave);
 
-        List<PollOptionResponse> pollOptionsDto = optionsToSave.stream()
+        List<PollOptionResponse> pollOptionsDto = optionsToSave
+                .stream()
                 .map(option -> new PollOptionResponse(
                         option.getId(),
                         option.getOptionText(),
@@ -65,5 +63,27 @@ public class PollService {
                 .toList();
 
         return new PollResponse(createdPoll.getId(), createdPoll.getQuestion(), pollOptionsDto);
+    }
+
+    @Transactional
+    public PollResponse getPollById(Long id) {
+
+        Poll fetchedPoll = pollRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Poll not found"
+        ));
+
+        List<PollOptionResponse> pollOptionsDto = pollOptionRepository
+                .findAllByPollId(id)
+                .stream()
+                .map(pollOptionFromDb -> new PollOptionResponse(
+                        pollOptionFromDb.getId(),
+                        pollOptionFromDb.getOptionText(),
+                        pollOptionFromDb.getVoteCount()
+                ))
+                .toList();
+
+
+        return new PollResponse(fetchedPoll.getId(), fetchedPoll.getQuestion(), pollOptionsDto);
     }
 }
