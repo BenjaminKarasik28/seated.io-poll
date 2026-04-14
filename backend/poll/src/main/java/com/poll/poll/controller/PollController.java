@@ -3,6 +3,7 @@ package com.poll.poll.controller;
 import com.poll.poll.PollApplication;
 import com.poll.poll.dto.poll.PollRequest;
 import com.poll.poll.dto.poll.PollResponse;
+import com.poll.poll.dto.polloption.PollOptionResponse;
 import com.poll.poll.service.PollService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,15 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response);
+    }
+    @PostMapping("poll/{id}/vote")
+    public ResponseEntity<PollOptionResponse> vote(@PathVariable Long id) {
+        PollOptionResponse response = pollService.vote(id);
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
+
     }
 
 }

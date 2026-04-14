@@ -1,7 +1,6 @@
 package com.poll.poll.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +10,12 @@ import lombok.Setter;
 public class Vote {
     @Id
     private Long id;
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "poll_id")
+//    private Poll poll;
+
+//    @ManyToOne
+//    private PollOption pollOption;
 
 }

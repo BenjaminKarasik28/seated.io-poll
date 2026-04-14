@@ -68,7 +68,9 @@ public class PollService {
     @Transactional
     public PollResponse getPollById(Long id) {
 
-        Poll fetchedPoll = pollRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
+        Poll fetchedPoll = pollRepository
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Poll not found"
         ));
@@ -85,5 +87,20 @@ public class PollService {
 
 
         return new PollResponse(fetchedPoll.getId(), fetchedPoll.getQuestion(), pollOptionsDto);
+    }
+
+    public PollOptionResponse vote(Long id) {
+
+        pollOptionRepository.incrementVoteCount(id);
+        pollOptionRepository.flush();
+        PollOption pollOption = pollOptionRepository
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Poll option not found"
+                ));
+
+        return new PollOptionResponse(pollOption.getId(), pollOption.getOptionText(), pollOption.getVoteCount());
+
     }
 }
