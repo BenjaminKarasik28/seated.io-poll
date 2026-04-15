@@ -10,6 +10,7 @@ import com.poll.poll.repository.PollRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,6 +60,40 @@ class PollServiceTest {
 
         verify(pollRepository, times(1)).save(any(Poll.class));
         verify(pollOptionRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void createPoll_shouldPropagateException_whenSaveFails() {
+        PollRequest request = new PollRequest("Q?", List.of("A", "B"));
+        when(pollRepository.save(any(Poll.class))).thenThrow(new RuntimeException("db down"));
+
+        assertThrows(RuntimeException.class, () -> pollService.createPoll(request));
+
+        verify(pollRepository, times(1)).save(any(Poll.class));
+        verify(pollOptionRepository, times(0)).saveAll(any());
+    }
+
+    @Test
+    void createPoll_shouldSetVoteCountZero_whenSavingOptions() {
+        PollRequest request = new PollRequest("Q?", List.of("A", "B"));
+
+        Poll saved = new Poll();
+        saved.setId(3L);
+        saved.setQuestion("Q?");
+
+        when(pollRepository.save(any(Poll.class))).thenReturn(saved);
+        when(pollOptionRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        pollService.createPoll(request);
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(pollOptionRepository).saveAll(captor.capture());
+        List<PollOption> savedOptions = captor.getValue();
+        assertEquals(2, savedOptions.size());
+        for (Object o : savedOptions) {
+            PollOption po = (PollOption) o;
+            assertEquals(0, po.getVoteCount());
+        }
     }
 
     @Test

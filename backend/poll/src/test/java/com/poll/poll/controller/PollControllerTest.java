@@ -5,9 +5,12 @@ import com.poll.poll.dto.polloption.PollOptionResponse;
 import com.poll.poll.service.PollService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,12 +27,15 @@ class PollControllerTest {
 
     private MockMvc mockMvc;
     private PollService pollService;
+    private PollController controller;
 
     @BeforeEach
     void setUp() {
         pollService = mock(PollService.class);
-        PollController controller = new PollController(pollService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new PollController(pollService);
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).setValidator(validator).build();
     }
 
     @Test
@@ -52,28 +58,40 @@ class PollControllerTest {
     }
 
     @Test
-    void getPollById_shouldReturnAccepted() throws Exception {
-        Long id = 5L;
-        when(pollService.getPollById(id)).thenReturn(
-                new PollResponse(id, "Best?", List.of(
-                        new PollOptionResponse(21L, "A", 1)
-                ))
-        );
+    void createPoll_shouldReturnBadRequest_whenQuestionBlank() throws Exception {
+        String json = "{\"question\":\"\",\"options\":[\"A\",\"B\"]}";
 
-        mockMvc.perform(get("/poll/{id}", id))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.id").value(5))
-                .andExpect(jsonPath("$.options", hasSize(1)));
+        mockMvc.perform(post("/poll")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void vote_shouldReturnAccepted() throws Exception {
-        Long optionId = 7L;
-        when(pollService.vote(optionId)).thenReturn(new PollOptionResponse(optionId, "Opt", 2));
+    void createPoll_shouldReturnBadRequest_whenTooFewOptions() throws Exception {
+        String json = "{\"question\":\"Q?\",\"options\":[\"Only\"]}";
+
+        mockMvc.perform(post("/poll")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getPollById_shouldReturnNotFound_whenServiceThrows() throws Exception {
+        Long id = 9L;
+        when(pollService.getPollById(id)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll not found"));
+
+        mockMvc.perform(get("/poll/{id}", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void vote_shouldReturnNotFound_whenServiceThrows() throws Exception {
+        Long optionId = 77L;
+        when(pollService.vote(optionId)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Poll option not found"));
 
         mockMvc.perform(post("/poll/{id}/vote", optionId))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.optionId").value(7))
-                .andExpect(jsonPath("$.voteCount").value(2));
+                .andExpect(status().isNotFound());
     }
 }
