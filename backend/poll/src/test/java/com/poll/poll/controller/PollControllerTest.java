@@ -2,9 +2,7 @@ package com.poll.poll.controller;
 
 import com.poll.poll.dto.poll.PollResponse;
 import com.poll.poll.dto.polloption.PollOptionResponse;
-import com.poll.poll.dto.poll.PollRequest;
 import com.poll.poll.service.PollService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -13,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,18 +26,12 @@ class PollControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private PollService pollService;
 
     @Test
     void createPoll_shouldReturnCreated() throws Exception {
-        Map<String, Object> request = Map.of(
-                "question", "Favorite color?",
-                "options", List.of("Red", "Blue")
-        );
+        String json = "{\"question\":\"Favorite color?\",\"options\":[\"Red\",\"Blue\"]}";
 
         when(pollService.createPoll(any())).thenReturn(
                 new PollResponse(1L, "Favorite color?", List.of(
@@ -51,7 +42,7 @@ class PollControllerTest {
 
         mockMvc.perform(post("/poll")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.options", hasSize(2)));
