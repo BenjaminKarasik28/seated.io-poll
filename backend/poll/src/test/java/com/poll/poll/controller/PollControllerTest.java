@@ -24,12 +24,11 @@ class PollControllerTest {
 
     private MockMvc mockMvc;
     private PollService pollService;
-    private PollController controller;
 
     @BeforeEach
     void setUp() {
         pollService = mock(PollService.class);
-        controller = new PollController(pollService);
+        PollController controller = new PollController(pollService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
