@@ -89,6 +89,7 @@ public class PollService {
         return new PollResponse(fetchedPoll.getId(), fetchedPoll.getQuestion(), pollOptionsDto);
     }
 
+    @Transactional
     public PollOptionResponse vote(Long id) {
 
         pollOptionRepository.incrementVoteCount(id);
